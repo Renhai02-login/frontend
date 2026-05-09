@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BuildDroid — Universal APK Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080c10;
+      --surface: #0e1318;
+      --surface2: #141c24;
+      --border: #1e2d3d;
+      --accent: #00e5ff;
+      --accent2: #7c3aed;
+      --accent3: #10b981;
+      --text: #e2eaf4;
+      --muted: #4a6278;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --font-display: 'Syne', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-display);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background Grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glowing orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.15;
+    }
+    .orb-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; right: -200px; }
+    .orb-2 { width: 400px; height: 400px; background: var(--accent2); bottom: -100px; left: -100px; }
+
+    /* Layout */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ─── HEADER ────────────────────────────────────────── */
+    header {
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8,12,16,0.85);
+      backdrop-filter: blur(16px);
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text span { color: var(--accent); }
+
+    .header-badge {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      background: rgba(0,229,255,0.1);
+      border: 1px solid rgba(0,229,255,0.2);
+      border-radius: 20px;
+      color: var(--accent);
+    }
+
+    /* ─── HERO ────────────────────────────────────────── */
+    .hero {
+      padding: 64px 0 48px;
+      text-align: center;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      background: rgba(0,229,255,0.07);
+      border: 1px solid rgba(0,229,255,0.15);
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      letter-spacing: 0.05em;
+    }
+
+    .hero-tag::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -2px;
+      margin-bottom: 20px;
+    }
+
+    h1 .gradient {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+      font-weight: 400;
+    }
+
+    /* Framework badges */
+    .framework-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 48px;
+    }
+
+    .fw-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 5px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+      transition: all 0.2s;
+    }
+
+    .fw-badge:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ─── STEPPER ─────────────────────────────────────── */
+    .steps-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 40px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 10px 16px;
+      border-radius: 10px;
+      transition: background 0.2s;
+      position: relative;
+    }
+
+    .step-item { cursor: default !important; pointer-events: none; }
+    .step-item:hover { background: transparent; }
+    .step-item.active .step-num { background: var(--accent); color: #000; }
+    .step-item.done .step-num { background: var(--accent3); color: #000; }
+
+    .step-num {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+
+    .step-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .step-item.active .step-label { color: var(--text); }
+    .step-item.done .step-label { color: var(--accent3); }
+
+    .step-connector {
+      width: 40px;
+      height: 1px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ─── PANELS ──────────────────────────────────────── */
+    .panel {
+      display: none;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .panel.active { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title .icon {
+      width: 32px; height: 32px;
+      background: rgba(0,229,255,0.1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    /* ─── FRAMEWORK GRID ──────────────────────────────── */
+    .framework-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .framework-card {
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .framework-card:hover {
+      border-color: rgba(0,229,255,0.3);
+      transform: translateY(-2px);
+    }
+
+    .framework-card.selected {
+      border-color: var(--accent);
+      background: rgba(0,229,255,0.05);
+    }
+
+    .framework-card .fw-icon { font-size: 2rem; margin-bottom: 8px; display: block; }
+    .framework-card .fw-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .framework-card .fw-desc {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
+    .framework-card.selected .fw-name { color: var(--accent); }
+
+    /* ─── DROP ZONE ───────────────────────────────────── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 14px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: var(--surface2);
+      position: relative;
+    }
+
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(0,229,255,0.03);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .drop-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .drop-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .drop-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+    }
+
+    .file-list {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    .file-item .file-name { color: var(--text); }
+    .file-item .file-size { color: var(--muted); }
+    .file-remove {
+      background: none;
+      border: none;
+      color: var(--danger);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0 4px;
+    }
+
+    /* ─── FORM INPUTS ─────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    input, select, textarea {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      transition: border-color 0.2s;
+      outline: none;
+      width: 100%;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    select option { background: var(--surface); }
+
+    .hint {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    /* Permissions checkboxes */
+    .perms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+    }
+
+    .perm-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      transition: all 0.2s;
+    }
+
+    .perm-item:hover { border-color: var(--accent); }
+    .perm-item input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--accent); }
+    .perm-item.checked { border-color: rgba(0,229,255,0.3); background: rgba(0,229,255,0.05); }
+
+    /* ─── NAVIGATION BUTTONS ──────────────────────────── */
+    .btn-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      background: #00c8e0;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(0,229,255,0.25);
+    }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-build {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-size: 1rem;
+      padding: 14px 36px;
+    }
+
+    .btn-build:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(0,229,255,0.3);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* ─── BUILD STATUS ────────────────────────────────── */
+    .build-status-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .build-spinner {
+      width: 80px; height: 80px;
+      margin: 0 auto 24px;
+      position: relative;
+    }
+
+    .spinner-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 3px solid transparent;
+    }
+
+    .spinner-ring-1 {
+      border-top-color: var(--accent);
+      animation: spin 1s linear infinite;
+    }
+
+    .spinner-ring-2 {
+      border-right-color: var(--accent2);
+      animation: spin 1.5s linear infinite reverse;
+      inset: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .build-status-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .build-status-msg {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    /* Progress Bar */
+    .progress-wrap {
+      background: var(--surface2);
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 999px;
+      transition: width 0.5s ease;
+    }
+
+    /* Log terminal */
+    .log-terminal {
+      background: #030507;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: left;
+      max-height: 280px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      line-height: 1.7;
+    }
+
+    .log-terminal::-webkit-scrollbar { width: 4px; }
+    .log-terminal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .log-line { color: var(--muted); }
+    .log-line.success { color: var(--success); }
+    .log-line.error { color: var(--danger); }
+    .log-line.info { color: var(--accent); }
+    .log-line.warning { color: var(--warning); }
+
+    /* Success state */
+    .success-card {
+      background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(0,229,255,0.05));
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .success-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--success);
+    }
+
+    .apk-meta {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .apk-meta-item {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    .apk-meta-item .label { color: var(--muted); }
+    .apk-meta-item .value { color: var(--text); font-weight: 700; }
+
+    .btn-download {
+      background: var(--success);
+      color: #fff;
+      font-size: 1rem;
+      padding: 14px 36px;
+      margin-top: 16px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-download:hover {
+      background: #0ca678;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(16,185,129,0.35);
+    }
+
+    /* ─── TOAST ───────────────────────────────────────── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      animation: slideIn 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast.success { background: var(--success); color: #fff; }
+    .toast.error { background: var(--danger); color: #fff; }
+    .toast.info { background: var(--accent); color: #000; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ─── FOOTER ──────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 80px;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ─── RESPONSIVE ──────────────────────────────────── */
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .framework-grid { grid-template-columns: repeat(2, 1fr); }
+      .step-label { display: none; }
+      .card { padding: 20px; }
+      .hero { padding: 40px 0 32px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <a href="#" class="logo">
+        <div class="logo-icon">🤖</div>
+        <div class="logo-text">Build<span>Droid</span></div>
+      </a>
+      <div class="header-badge">Universal APK Builder</div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="container">
+  <section class="hero">
+    <div class="hero-tag">Free · Open Source · No Account Needed</div>
+    <h1>Build APK from<br><span class="gradient">Any Framework</span></h1>
+    <p class="hero-sub">Upload your source code, assets, and icons. We'll compile your APK in the cloud — no Android Studio required.</p>
+    <div class="framework-strip">
+      <span class="fw-badge">⚛️ React Native</span>
+      <span class="fw-badge">🐦 Flutter</span>
+      <span class="fw-badge">⚡ Ionic</span>
+      <span class="fw-badge">📱 Cordova</span>
+      <span class="fw-badge">🔋 Capacitor</span>
+      <span class="fw-badge">🌌 Expo</span>
+      <span class="fw-badge">🔷 NativeScript</span>
+      <span class="fw-badge">🤖 Android Native</span>
+      <span class="fw-badge">🌐 PWA → APK</span>
+    </div>
+  </section>
+
+  <!-- STEPPER -->
+  <div class="steps-nav">
+    <div class="step-item active" data-step="1">
+      <div class="step-num">1</div>
+      <div class="step-label">Framework</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" data-step="2">
+      <div class="step-num">2</div>
+      <div class="step-label">Upload Files</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" data-step="3">
+      <div class="step-num">3</div>
+      <div class="step-label">App Config</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" data-step="4">
+      <div class="step-num">4</div>
+      <div class="step-label">Build</div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 1: Framework ─────────────────────────── -->
+  <div class="panel active" id="panel-1">
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">🔍</div>
+        Choose Your Framework
+      </div>
+      <div class="framework-grid" id="frameworkGrid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+    <div class="btn-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="goToStep(2)">
+        Next: Upload Files →
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── STEP 2: Upload Files ──────────────────────── -->
+  <div class="panel" id="panel-2">
+
+    <!-- Source Code -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">📦</div>
+        Source Code (ZIP)
+      </div>
+      <div class="drop-zone" id="sourceDropZone">
+        <input type="file" id="sourceFile" accept=".zip,.tar,.gz" onchange="handleFile('source', this)">
+        <span class="drop-icon">📁</span>
+        <div class="drop-title">Drop your project ZIP here</div>
+        <div class="drop-sub">Supports .zip, .tar.gz • Max 500MB</div>
+      </div>
+      <div class="file-list" id="sourceFileList"></div>
+    </div>
+
+    <!-- Icons & Splash -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">🎨</div>
+        Icons & Splash Screens
+        <span style="font-size:0.72rem; color: var(--muted); font-weight: 400; margin-left: auto;">Optional</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div>
+          <label style="margin-bottom: 10px; display:block;">App Icon(s)</label>
+          <div class="drop-zone" style="padding: 28px 16px;">
+            <input type="file" id="iconFiles" accept="image/*" multiple onchange="handleFile('icons', this)">
+            <span class="drop-icon" style="font-size: 2rem;">🖼️</span>
+            <div class="drop-title" style="font-size: 0.85rem;">Drop icons</div>
+            <div class="drop-sub">PNG, SVG, WEBP • Multiple sizes OK</div>
+          </div>
+          <div class="file-list" id="iconFileList"></div>
+        </div>
+        <div>
+          <label style="margin-bottom: 10px; display:block;">Splash Screen(s)</label>
+          <div class="drop-zone" style="padding: 28px 16px;">
+            <input type="file" id="splashFiles" accept="image/*" multiple onchange="handleFile('splash', this)">
+            <span class="drop-icon" style="font-size: 2rem;">📲</span>
+            <div class="drop-title" style="font-size: 0.85rem;">Drop splash screens</div>
+            <div class="drop-sub">PNG, SVG • Various densities OK</div>
+          </div>
+          <div class="file-list" id="splashFileList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extra Assets -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">📎</div>
+        Extra Assets
+        <span style="font-size:0.72rem; color: var(--muted); font-weight: 400; margin-left: auto;">Optional — fonts, images, media, config files</span>
+      </div>
+      <div class="drop-zone">
+        <input type="file" id="assetFiles" multiple onchange="handleFile('assets', this)">
+        <span class="drop-icon">🗂️</span>
+        <div class="drop-title">Drop additional assets</div>
+        <div class="drop-sub">Any file type • Images, fonts, JSON, media, etc.</div>
+      </div>
+      <div class="file-list" id="assetFileList"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goToStep(3)">Next: App Config →</button>
+    </div>
+  </div>
+
+  <!-- ─── STEP 3: App Config ────────────────────────── -->
+  <div class="panel" id="panel-3">
+    <div class="card">
+      <div class="card-title"><div class="icon">⚙️</div>App Information</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>App Name *</label>
+          <input type="text" id="appName" placeholder="My Awesome App" />
+        </div>
+        <div class="form-group">
+          <label>Package Name *</label>
+          <input type="text" id="packageName" placeholder="com.yourname.app" />
+          <span class="hint">Unique ID for your app (reverse domain notation)</span>
+        </div>
+        <div class="form-group">
+          <label>Version Name</label>
+          <input type="text" id="versionName" placeholder="1.0.0" value="1.0.0" />
+        </div>
+        <div class="form-group">
+          <label>Version Code</label>
+          <input type="number" id="versionCode" placeholder="1" value="1" min="1" />
+          <span class="hint">Integer, increment on each update</span>
+        </div>
+        <div class="form-group">
+          <label>Build Type</label>
+          <select id="buildType">
+            <option value="debug">Debug (faster, for testing)</option>
+            <option value="release">Release (for distribution)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Min Android SDK</label>
+          <select id="minSdk">
+            <option value="21">API 21 — Android 5.0 Lollipop</option>
+            <option value="23">API 23 — Android 6.0 Marshmallow</option>
+            <option value="24" selected>API 24 — Android 7.0 Nougat</option>
+            <option value="26">API 26 — Android 8.0 Oreo</option>
+            <option value="28">API 28 — Android 9.0 Pie</option>
+            <option value="29">API 29 — Android 10</option>
+            <option value="30">API 30 — Android 11</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon">🔐</div>Permissions</div>
+      <div class="perms-grid" id="permsGrid">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+      <button class="btn btn-build" onclick="startBuild()">
+        🚀 Start Building APK
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── STEP 4: Build ─────────────────────────────── -->
+  <div class="panel" id="panel-4">
+    <!-- Building state -->
+    <div id="buildingState" class="build-status-card">
+      <div class="build-spinner">
+        <div class="spinner-ring spinner-ring-1"></div>
+        <div class="spinner-ring spinner-ring-2"></div>
+      </div>
+      <div class="build-status-title" id="buildTitle">Initializing Build...</div>
+      <div class="build-status-msg" id="buildMsg">Preparing your build environment</div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+      </div>
+      <div class="log-terminal" id="logTerminal">
+        <div class="log-line info">// Build log will appear here...</div>
+      </div>
+    </div>
+
+    <!-- Success state -->
+    <div id="successState" class="success-card" style="display:none;">
+      <span class="success-icon">✅</span>
+      <div class="success-title">APK Ready!</div>
+      <p style="color: var(--muted); margin-bottom: 20px; font-size: 0.9rem;">Your APK has been built successfully and is ready to download.</p>
+      <div class="apk-meta" id="apkMeta"></div>
+      <a href="#" class="btn btn-download btn-primary" id="downloadBtn" download>
+        ⬇️ Download APK
+      </a>
+      <br><br>
+      <button class="btn btn-secondary" onclick="resetBuilder()" style="margin-top: 8px;">Build Another App</button>
+    </div>
+
+    <!-- Failed state -->
+    <div id="failedState" class="card" style="display:none; border-color: var(--danger); text-align:center;">
+      <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
+      <div style="font-size: 1.3rem; font-weight: 800; color: var(--danger); margin-bottom: 8px;">Build Failed</div>
+      <div id="failedMsg" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); margin-bottom: 24px;"></div>
+      <div class="log-terminal" id="errorLog" style="text-align: left;"></div>
+      <br>
+      <button class="btn btn-secondary" onclick="goToStep(3)" style="margin: 0 auto;">← Try Again</button>
+    </div>
+  </div>
+
+</div> <!-- /container -->
+
+<!-- REPORT MODAL -->
+<div id="reportModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:999; backdrop-filter:blur(6px); align-items:center; justify-content:center;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:36px; max-width:480px; width:90%; position:relative; animation:fadeUp 0.3s ease;">
+    <button onclick="closeReport()" style="position:absolute; top:16px; right:16px; background:none; border:none; color:var(--muted); font-size:1.3rem; cursor:pointer;">✕</button>
+    <div style="font-size:2rem; margin-bottom:12px;">🐛</div>
+    <div style="font-size:1.2rem; font-weight:800; margin-bottom:6px;">Laporkan Masalah</div>
+    <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); margin-bottom:20px;">Temukan bug atau error? Ceritain ke kami!</div>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div>
+        <label style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; display:block; margin-bottom:6px;">Jenis Masalah</label>
+        <select id="reportType" style="width:100%;">
+          <option value="bug">🐛 Bug / Error</option>
+          <option value="build-fail">❌ Build Gagal Terus</option>
+          <option value="ui">🎨 Tampilan Rusak</option>
+          <option value="feature">💡 Request Fitur</option>
+          <option value="other">💬 Lainnya</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; display:block; margin-bottom:6px;">Deskripsi Masalah *</label>
+        <textarea id="reportDesc" rows="4" placeholder="Ceritain masalahnya di sini, semakin detail makin cepat diperbaiki 🙏" style="width:100%; resize:vertical;"></textarea>
+      </div>
+      <div>
+        <label style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; display:block; margin-bottom:6px;">Email / Kontak (opsional)</label>
+        <input type="text" id="reportContact" placeholder="email atau username kamu" style="width:100%;" />
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button class="btn btn-secondary" onclick="closeReport()" style="flex:1;">Batal</button>
+      <button class="btn btn-primary" onclick="submitReport()" style="flex:2;">Kirim Laporan 🚀</button>
+    </div>
+    <div id="reportSuccess" style="display:none; margin-top:16px; text-align:center; font-family:var(--font-mono); font-size:0.8rem; color:var(--success);">
+      ✅ Laporan terkirim! Makasih udah bantu kami berkembang 🙏
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+
+    <!-- Sawer / Donasi -->
+    <div style="margin-bottom:28px;">
+      <div style="font-size:1rem; font-weight:700; color:var(--text); margin-bottom:4px;">☕ Traktir Developer</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-bottom:14px; font-family:var(--font-mono);">
+        Kalau BuildDroid bermanfaat, traktir kopi biar semangat ngembanginnya!
+      </div>
+      <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; align-items:center;">
+        <!-- Saweria -->
+        <a href="https://saweria.co/Renit" target="_blank" style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px; background:linear-gradient(135deg,#f97316,#ef4444); border-radius:10px; color:#fff; font-weight:700; font-size:0.85rem; text-decoration:none; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+          ☕ Saweria
+        </a>
+        <!-- Trakteer -->
+        <a href="https://teer.id/renit" target="_blank" style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px; background:linear-gradient(135deg,#be1e2d,#8b0000); border-radius:10px; color:#fff; font-weight:700; font-size:0.85rem; text-decoration:none; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+          💖 Trakteer
+        </a>
+        <!-- Report -->
+        <button onclick="openReport()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-weight:700; font-size:0.85rem; cursor:pointer; font-family:var(--font-display); transition:all 0.2s;" onmouseover="this.style.borderColor='var(--danger)'; this.style.color='var(--danger)'" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text)'">
+          🐛 Laporkan Masalah
+        </button>
+      </div>
+    </div>
+
+    <!-- Credits -->
+    <div style="border-top:1px solid var(--border); padding-top:24px; margin-bottom:16px;">
+      <div style="font-size:0.78rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:14px;">🙏 Thanks To</div>
+      <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-bottom:20px;">
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:10px;">
+          <span style="font-size:1.1rem;">🤖</span>
+          <div style="text-align:left;">
+            <div style="font-size:0.75rem; font-weight:700; color:var(--text);">Claude (Anthropic)</div>
+            <div style="font-family:var(--font-mono); font-size:0.62rem; color:var(--muted);">AI Assistant</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:10px;">
+          <span style="font-size:1.1rem;">👨‍💻</span>
+          <div style="text-align:left;">
+            <div style="font-size:0.75rem; font-weight:700; color:var(--text);">Renzan</div>
+            <div style="font-family:var(--font-mono); font-size:0.62rem; color:var(--muted);">Developer</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:10px;">
+          <span style="font-size:1.1rem;">🌸</span>
+          <div style="text-align:left;">
+            <div style="font-size:0.75rem; font-weight:700; color:var(--text);">Kimi</div>
+            <div style="font-family:var(--font-mono); font-size:0.62rem; color:var(--muted);">Special Support</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:10px;">
+          <span style="font-size:1.1rem;">🐙</span>
+          <div style="text-align:left;">
+            <div style="font-size:0.75rem; font-weight:700; color:var(--text);">GitHub</div>
+            <div style="font-family:var(--font-mono); font-size:0.62rem; color:var(--muted);">Source Hosting</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:10px;">
+          <span style="font-size:1.1rem;">▲</span>
+          <div style="text-align:left;">
+            <div style="font-size:0.75rem; font-weight:700; color:var(--text);">Vercel</div>
+            <div style="font-family:var(--font-mono); font-size:0.62rem; color:var(--muted);">Frontend Hosting</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:10px;">
+          <span style="font-size:1.1rem;">❤️</span>
+          <div style="text-align:left;">
+            <div style="font-size:0.75rem; font-weight:700; color:var(--text);">You (User)</div>
+            <div style="font-family:var(--font-mono); font-size:0.62rem; color:var(--muted);">The reason we build</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--muted);">
+      BuildDroid &copy; 2025 &nbsp;·&nbsp; 
+      Powered by Android SDK + Flutter + Gradle &nbsp;·&nbsp; 
+      <a href="https://railway.app" style="color:var(--accent);">Railway</a> + <a href="https://vercel.com" style="color:var(--accent);">Vercel</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Report modal
+function openReport() {
+  const modal = document.getElementById('reportModal');
+  modal.style.display = 'flex';
+  document.getElementById('reportSuccess').style.display = 'none';
+  document.getElementById('reportDesc').value = '';
+  document.getElementById('reportContact').value = '';
+}
+function closeReport() {
+  document.getElementById('reportModal').style.display = 'none';
+}
+function submitReport() {
+  const desc = document.getElementById('reportDesc').value.trim();
+  if (!desc) return toast('Deskripsi masalah wajib diisi!', 'error');
+  // Kirim ke backend jika tersedia, atau fallback ke mailto
+  const type = document.getElementById('reportType').value;
+  const contact = document.getElementById('reportContact').value.trim();
+  const subject = encodeURIComponent(`[BuildDroid Report] ${type}`);
+  const body = encodeURIComponent(`Jenis: ${type}\nKontak: ${contact || '-'}\n\nDeskripsi:\n${desc}`);
+  document.getElementById('reportSuccess').style.display = 'block';
+  setTimeout(() => {
+    window.open(`mailto:renit7102@gmail.com?subject=${subject}&body=${body}`);
+  }, 800);
+}
+// Close modal when clicking backdrop
+document.getElementById('reportModal').addEventListener('click', function(e) {
+  if (e.target === this) closeReport();
+});
+</script>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────
+// CHANGE THIS to your Railway backend URL after deploying
+const API_BASE = 'https://web-to-apk-osq3.onrender.com';
+
+// ─── STATE ────────────────────────────────────────────────────────────
+let state = {
+  step: 1,
+  framework: 'auto',
+  files: {
+    source: null,
+    icons: [],
+    splash: [],
+    assets: []
+  },
+  jobId: null,
+  pollInterval: null
+};
+
+// ─── FRAMEWORKS ───────────────────────────────────────────────────────
+const frameworks = [
+  { id: 'auto', icon: '🔍', name: 'Auto Detect', desc: 'We figure it out' },
+  { id: 'react-native', icon: '⚛️', name: 'React Native', desc: 'JS + Native bridge' },
+  { id: 'flutter', icon: '🐦', name: 'Flutter', desc: 'Dart framework' },
+  { id: 'expo', icon: '🌌', name: 'Expo', desc: 'Managed RN' },
+  { id: 'ionic', icon: '⚡', name: 'Ionic', desc: 'Web + Native' },
+  { id: 'capacitor', icon: '🔋', name: 'Capacitor', desc: 'Web bridge' },
+  { id: 'cordova', icon: '📱', name: 'Cordova', desc: 'HTML5 apps' },
+  { id: 'nativescript', icon: '🔷', name: 'NativeScript', desc: 'JS Native' },
+  { id: 'android-native', icon: '🤖', name: 'Android Native', desc: 'Java / Kotlin' },
+  { id: 'pwa-twa', icon: '🌐', name: 'PWA → APK', desc: 'Bubblewrap TWA' },
+];
+
+const permissions = [
+  'INTERNET', 'CAMERA', 'RECORD_AUDIO', 'ACCESS_FINE_LOCATION',
+  'ACCESS_COARSE_LOCATION', 'READ_EXTERNAL_STORAGE', 'WRITE_EXTERNAL_STORAGE',
+  'BLUETOOTH', 'VIBRATE', 'RECEIVE_SMS', 'READ_CONTACTS', 'CALL_PHONE',
+  'USE_BIOMETRIC', 'PUSH_NOTIFICATIONS'
+];
+
+// ─── INIT ─────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  renderFrameworks();
+  renderPermissions();
+  setupDragDrop();
+});
+
+function renderFrameworks() {
+  const grid = document.getElementById('frameworkGrid');
+  grid.innerHTML = frameworks.map(fw => `
+    <div class="framework-card ${fw.id === state.framework ? 'selected' : ''}" 
+         onclick="selectFramework('${fw.id}', this)">
+      <span class="fw-icon">${fw.icon}</span>
+      <div class="fw-name">${fw.name}</div>
+      <div class="fw-desc">${fw.desc}</div>
+    </div>
+  `).join('');
+}
+
+function selectFramework(id, el) {
+  state.framework = id;
+  document.querySelectorAll('.framework-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function renderPermissions() {
+  const grid = document.getElementById('permsGrid');
+  grid.innerHTML = permissions.map(p => `
+    <label class="perm-item" id="perm-${p}">
+      <input type="checkbox" value="${p}" onchange="togglePermClass(this, '${p}')">
+      ${p.replace(/_/g, ' ')}
+    </label>
+  `).join('');
+  // Check INTERNET by default
+  const inet = document.querySelector(`input[value="INTERNET"]`);
+  if (inet) { inet.checked = true; document.getElementById('perm-INTERNET').classList.add('checked'); }
+}
+
+function togglePermClass(el, id) {
+  document.getElementById(`perm-${id}`).classList.toggle('checked', el.checked);
+}
+
+// ─── STEP NAVIGATION ──────────────────────────────────────────────────
+function goToStep(n) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.step-item').forEach(s => {
+    const sn = parseInt(s.dataset.step);
+    s.classList.remove('active', 'done');
+    if (sn === n) s.classList.add('active');
+    else if (sn < n) s.classList.add('done');
+  });
+  document.getElementById(`panel-${n}`).classList.add('active');
+  state.step = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── FILE HANDLING ────────────────────────────────────────────────────
+function handleFile(type, input) {
+  const files = Array.from(input.files);
+  
+  if (type === 'source') {
+    state.files.source = files[0] || null;
+    renderFileList('sourceFileList', state.files.source ? [state.files.source] : [], 'source');
+  } else if (type === 'icons') {
+    state.files.icons = [...state.files.icons, ...files];
+    renderFileList('iconFileList', state.files.icons, 'icons');
+  } else if (type === 'splash') {
+    state.files.splash = [...state.files.splash, ...files];
+    renderFileList('splashFileList', state.files.splash, 'splash');
+  } else if (type === 'assets') {
+    state.files.assets = [...state.files.assets, ...files];
+    renderFileList('assetFileList', state.files.assets, 'assets');
+  }
+}
+
+function renderFileList(containerId, files, type) {
+  const container = document.getElementById(containerId);
+  if (!files.length) { container.innerHTML = ''; return; }
+  container.innerHTML = files.map((f, i) => `
+    <div class="file-item">
+      <span class="file-name">${f.name}</span>
+      <span class="file-size">${(f.size / 1024).toFixed(1)} KB</span>
+      <button class="file-remove" onclick="removeFile('${type}', ${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeFile(type, idx) {
+  if (type === 'source') state.files.source = null;
+  else if (type === 'icons') state.files.icons.splice(idx, 1);
+  else if (type === 'splash') state.files.splash.splice(idx, 1);
+  else if (type === 'assets') state.files.assets.splice(idx, 1);
+  
+  const listIds = { source: 'sourceFileList', icons: 'iconFileList', splash: 'splashFileList', assets: 'assetFileList' };
+  const data = type === 'source' ? (state.files.source ? [state.files.source] : []) : state.files[type];
+  renderFileList(listIds[type], data, type);
+}
+
+function setupDragDrop() {
+  document.querySelectorAll('.drop-zone').forEach(zone => {
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); });
+  });
+}
+
+// ─── BUILD ────────────────────────────────────────────────────────────
+async function startBuild() {
+  const appName = document.getElementById('appName').value.trim();
+  const packageName = document.getElementById('packageName').value.trim();
+
+  if (!appName) return toast('App Name is required', 'error');
+  if (!packageName) return toast('Package Name is required', 'error');
+  if (!/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/.test(packageName)) {
+    return toast('Invalid package name (e.g. com.myapp.name)', 'error');
+  }
+  if (!state.files.source) return toast('Please upload your source code ZIP', 'error');
+
+  goToStep(4);
+
+  const formData = new FormData();
+  formData.append('framework', state.framework);
+  formData.append('appName', appName);
+  formData.append('packageName', packageName);
+  formData.append('versionName', document.getElementById('versionName').value || '1.0.0');
+  formData.append('versionCode', document.getElementById('versionCode').value || '1');
+  formData.append('buildType', document.getElementById('buildType').value);
+  formData.append('minSdk', document.getElementById('minSdk').value);
+
+  const selectedPerms = Array.from(document.querySelectorAll('#permsGrid input:checked')).map(i => i.value);
+  formData.append('permissions', JSON.stringify(selectedPerms));
+
+  if (state.files.source) formData.append('sourceZip', state.files.source);
+  state.files.icons.forEach(f => formData.append('icons', f));
+  state.files.splash.forEach(f => formData.append('splashScreens', f));
+  state.files.assets.forEach(f => formData.append('assets', f));
+
+  try {
+    // Wake up backend dulu (Render free tier spin down)
+    updateJob_UI('Waking up build server...', 5);
+    await wakeBackend();
+
+    // Retry fetch sampai 3x
+    let resp, data, lastErr;
+    for (let i = 0; i < 3; i++) {
+      try {
+        updateJob_UI(`Submitting build... (attempt ${i+1}/3)`, 8);
+        resp = await fetch(`${API_BASE}/api/build/submit`, { 
+          method: 'POST', 
+          body: formData,
+          signal: AbortSignal.timeout(60000) // 60 detik timeout
+        });
+        data = await resp.json();
+        lastErr = null;
+        break;
+      } catch(e) {
+        lastErr = e;
+        if (i < 2) {
+          updateJob_UI(`Server belum ready, retry dalam 5 detik... (${i+1}/3)`, 5);
+          await new Promise(r => setTimeout(r, 5000));
+        }
+      }
+    }
+
+    if (lastErr) throw lastErr;
+    if (!resp.ok) throw new Error(data.error || 'Submission failed');
+
+    state.jobId = data.jobId;
+    toast('Build submitted! Compiling...', 'info');
+    startPolling(data.jobId);
+
+  } catch (err) {
+    showFailed(err.message, []);
+    toast('Failed to submit build', 'error');
+  }
+}
+
+// Wake up Render backend
+async function wakeBackend() {
+  for (let i = 0; i < 5; i++) {
+    try {
+      const r = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(15000) });
+      if (r.ok) return true;
+    } catch(e) {}
+    await new Promise(r => setTimeout(r, 5000));
+  }
+  return false;
+}
+
+function updateJob_UI(msg, progress) {
+  const el = document.getElementById('buildMsg');
+  const pb = document.getElementById('progressBar');
+  if (el) el.textContent = msg;
+  if (pb) pb.style.width = `${progress}%`;
+}
+
+function startPolling(jobId) {
+  // Try SSE first
+  try {
+    const evtSource = new EventSource(`${API_BASE}/api/status/${jobId}/stream`);
+    evtSource.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      updateBuildUI(data);
+      if (['completed', 'failed'].includes(data.status)) evtSource.close();
+    };
+    evtSource.onerror = () => {
+      evtSource.close();
+      // Fallback to polling
+      state.pollInterval = setInterval(() => pollStatus(jobId), 2000);
+    };
+  } catch {
+    state.pollInterval = setInterval(() => pollStatus(jobId), 2000);
+  }
+}
+
+async function pollStatus(jobId) {
+  try {
+    const resp = await fetch(`${API_BASE}/api/status/${jobId}`);
+    const data = await resp.json();
+    updateBuildUI(data);
+    if (['completed', 'failed'].includes(data.status)) {
+      clearInterval(state.pollInterval);
+    }
+  } catch (err) {
+    console.error('Poll error:', err);
+  }
+}
+
+function updateBuildUI(data) {
+  document.getElementById('buildTitle').textContent = 
+    data.status === 'building' ? 'Building APK...' :
+    data.status === 'queued' ? 'Queued...' : 
+    data.status === 'completed' ? 'Build Complete!' : 'Build Failed';
+
+  document.getElementById('buildMsg').textContent = data.message || '';
+  document.getElementById('progressBar').style.width = `${data.progress || 0}%`;
+
+  // Update logs
+  if (data.logs?.length) {
+    const terminal = document.getElementById('logTerminal');
+    terminal.innerHTML = data.logs.map(line => {
+      const cls = line.includes('✅') || line.includes('complete') ? 'success' :
+                  line.includes('❌') || line.includes('ERROR') ? 'error' :
+                  line.includes('⚠') ? 'warning' :
+                  line.startsWith('[') ? 'info' : '';
+      return `<div class="log-line ${cls}">${escapeHtml(line)}</div>`;
+    }).join('');
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  if (data.status === 'completed') showSuccess(data);
+  else if (data.status === 'failed') showFailed(data.error, data.logs || []);
+}
+
+function showSuccess(data) {
+  document.getElementById('buildingState').style.display = 'none';
+  document.getElementById('successState').style.display = 'block';
+  document.getElementById('failedState').style.display = 'none';
+
+  const meta = document.getElementById('apkMeta');
+  meta.innerHTML = `
+    <div class="apk-meta-item"><div class="label">Size</div><div class="value">${data.apkSize || 'N/A'}</div></div>
+    <div class="apk-meta-item"><div class="label">Framework</div><div class="value">${data.framework || state.framework}</div></div>
+    <div class="apk-meta-item"><div class="label">Build Type</div><div class="value">${document.getElementById('buildType').value}</div></div>
+  `;
+
+  const dlBtn = document.getElementById('downloadBtn');
+  dlBtn.href = `${API_BASE}${data.apkUrl}`;
+}
+
+function showFailed(error, logs) {
+  document.getElementById('buildingState').style.display = 'none';
+  document.getElementById('successState').style.display = 'none';
+  document.getElementById('failedState').style.display = 'block';
+
+  document.getElementById('failedMsg').textContent = error || 'Unknown build error';
+  document.getElementById('errorLog').innerHTML = logs.map(l => `<div class="log-line error">${escapeHtml(l)}</div>`).join('');
+}
+
+function resetBuilder() {
+  state = { step: 1, framework: 'auto', files: { source: null, icons: [], splash: [], assets: [] }, jobId: null, pollInterval: null };
+  document.getElementById('buildingState').style.display = 'block';
+  document.getElementById('successState').style.display = 'none';
+  document.getElementById('failedState').style.display = 'none';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('logTerminal').innerHTML = '<div class="log-line info">// Build log will appear here...</div>';
+  renderFrameworks();
+  goToStep(1);
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = type === 'success' ? '✅ ' + msg : type === 'error' ? '❌ ' + msg : '💬 ' + msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+</script>
+</body>
+</html>
